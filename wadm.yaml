@@ -1,0 +1,40 @@
+# `wash app deploy wadm.yaml`
+
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: nats-micro-calculator
+  annotations:
+    version: v0.0.1
+    description: "NATS Microservices Example"
+spec:
+  components:
+    - name: Calculator Microservice
+      type: actor
+      properties:
+        image: file:///home/kevin/code/autodidaddict/nats-micro-calculator/build/nats_micro_calculator_s.wasm
+      traits:
+        - type: spreadscaler
+          properties:
+            replicas: 1
+        - type: linkdef
+          properties:
+            target: redis
+            values:
+              URL: redis://127.0.0.1:6379/            
+        - type: linkdef
+          properties:
+            target: messaging
+            values:
+              SUBSCRIPTION: '$SRV.>,demo.*'
+
+    - name: messaging
+      type: capability
+      properties:
+        image: wasmcloud.azurecr.io/nats_messaging:0.17.0
+        contract: wasmcloud:messaging
+    - name: redis
+      type: capability
+      properties:
+        image: wasmcloud.azurecr.io/kvredis:0.21.0
+        contract: wasmcloud:keyvalue
